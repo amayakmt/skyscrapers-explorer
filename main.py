@@ -91,7 +91,7 @@ columns_to_exclude = ['id', 'location_city_id', 'location_country id', 'purposes
                       'purposes_office', 'purposes_other', 'purposes_religious', 'purposes_residential',
                       'purposes_retail', 'purposes_serviced apartments', 'purposes_telecommunications',
                       'status_completed_is completed', 'status_started_is started']
-filtered_df = filtered_df.drop(columns=columns_to_exclude, axis=1)
+filtered_df = filtered_df.drop(columns=columns_to_exclude)
 
 # Tabs for better organization
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -110,14 +110,17 @@ with tab2:
     # Round the height to the nearest meter
     filtered_df['statistics_height'] = round(filtered_df['statistics_height'], 0)
 
+    # Records with unknown coordinates are stored as (0, 0); keep them off the map
+    mapped_df = filtered_df[(filtered_df['location_latitude'] != 0) & (filtered_df['location_longitude'] != 0)]
+
     # Ensure latitude and longitude columns exist
-    if not filtered_df.empty and 'location_latitude' in filtered_df.columns and 'location_longitude' in filtered_df.columns:
+    if not mapped_df.empty and 'location_latitude' in mapped_df.columns and 'location_longitude' in mapped_df.columns:
         # Dropdown to select a city
-        unique_cities = filtered_df['location_city'].unique()
+        unique_cities = mapped_df['location_city'].unique()
         selected_city = st.selectbox("Select a City", options=unique_cities, index=0)
 
         # Filter data for the selected city
-        city_data = filtered_df[filtered_df['location_city'] == selected_city]
+        city_data = mapped_df[mapped_df['location_city'] == selected_city]
 
         # Set map view to the selected city
         view_state = pdk.ViewState(
@@ -189,18 +192,21 @@ with tab4:
 with tab5:
     st.subheader("Trend of Skyscraper Construction Over Time")
     year_counts = filtered_df['status_completed_year'].dropna().value_counts().sort_index()
-    all_years = pd.Series(0, index=pd.RangeIndex(start=int(year_counts.index.min()), stop=2025))
-    year_counts = all_years.add(year_counts, fill_value=0).sort_index()
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(year_counts.index, year_counts.values, color='#a18972', linewidth=2)
-    fig.patch.set_facecolor("#191919")
-    ax.set_facecolor("#191919")
-    ax.set_xlabel("Year", fontsize=14, color="#a18972")
-    ax.set_ylabel("Number of Skyscrapers", fontsize=14, color="#a18972")
-    plt.xticks(rotation=45, ha="right", fontsize=12, color="#a18972")
-    plt.yticks(fontsize=12, color="#a18972")
-    ax.grid(axis='y', linestyle='--', linewidth=0.7, alpha=0.5, color="#a18972")
-    st.pyplot(fig)
+    if year_counts.empty:
+        st.write("No data available for trend visualization.")
+    else:
+        all_years = pd.Series(0, index=pd.RangeIndex(start=int(year_counts.index.min()), stop=2025))
+        year_counts = all_years.add(year_counts, fill_value=0).sort_index()
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(year_counts.index, year_counts.values, color='#a18972', linewidth=2)
+        fig.patch.set_facecolor("#191919")
+        ax.set_facecolor("#191919")
+        ax.set_xlabel("Year", fontsize=14, color="#a18972")
+        ax.set_ylabel("Number of Skyscrapers", fontsize=14, color="#a18972")
+        plt.xticks(rotation=45, ha="right", fontsize=12, color="#a18972")
+        plt.yticks(fontsize=12, color="#a18972")
+        ax.grid(axis='y', linestyle='--', linewidth=0.7, alpha=0.5, color="#a18972")
+        st.pyplot(fig)
 
 # Tab 6: Download Data
 with tab6:
