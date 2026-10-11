@@ -2,6 +2,10 @@
 
 **A Streamlit dashboard for exploring 2,431 US skyscrapers: filter by year, height, and city, then read the results as a table, a 3D height map, summary statistics, and trend charts, and export the selection as CSV.**
  
+![Skyline Lens walkthrough: 3D height map, top cities, construction trend, and statistics, first for all of the US and then filtered to Chicago](docs/demo.gif)
+ 
+*The app running locally without a Mapbox key, so the map draws building columns on a plain background.*
+ 
 ## Motivation
  
 A raw skyscraper CSV is 2,431 rows and 41 columns: easy to store, hard to read. The questions people actually ask are simple. Which cities have the most towers? When did the building booms happen? What does a skyline look like once you plot height instead of listing it?
